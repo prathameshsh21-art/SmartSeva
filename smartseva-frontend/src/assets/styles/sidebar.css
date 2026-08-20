@@ -1,0 +1,30 @@
+.sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: #ffffff;
+  border-right: 1px solid #dee2e6;
+}
+
+.sidebar .nav-link {
+  color: #495057;
+  margin-bottom: 4px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.sidebar .nav-link:hover {
+  background: #e9ecef;
+}
+
+.sidebar .nav-link.active {
+  background: #0d6efd;
+  color: white !important;
+}
+
+.sidebar-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #6c757d;
+  margin-top: 20px;
+  margin-bottom: 8px;
+}

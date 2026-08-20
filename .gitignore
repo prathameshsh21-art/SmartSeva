@@ -1,0 +1,32 @@
+# ================================
+# SmartSeva - Root Git Ignore
+# ================================
+
+# ---------- Backend ----------
+smartseva-backend/target/
+smartseva-backend/logs/
+smartseva-backend/uploads/
+
+# Spring / local configuration
+smartseva-backend/.idea/
+smartseva-backend/*.iml
+
+# Eclipse generated files
+smartseva-backend/.classpath
+smartseva-backend/.project
+smartseva-backend/.settings/
+
+# ---------- Frontend ----------
+smartseva-frontend/node_modules/
+smartseva-frontend/dist/
+
+# Environment files
+smartseva-frontend/.env
+smartseva-frontend/.env.*
+!smartseva-frontend/.env.example
+
+# ---------- General ----------
+*.log
+*.tmp
+.DS_Store
+Thumbs.db

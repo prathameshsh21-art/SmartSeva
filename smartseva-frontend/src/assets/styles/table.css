@@ -1,0 +1,21 @@
+.table-container {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.table thead {
+  background: #f8f9fa;
+}
+
+.table th {
+  font-weight: 600;
+}
+
+.table tbody tr:hover {
+  background: #f5f7fa;
+}
+
+.table-actions button {
+  margin-right: 5px;
+}
