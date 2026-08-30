@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -22,6 +23,9 @@ public class NotificationDTO {
     private NotificationType notificationType;
     private String recipient;
     private NotificationStatus status;
+    private String failureReason;
+    private String messageContent;
+    private List<ChannelDeliveryResultDTO> deliveryResults;
     private LocalDateTime sentAt;
     private LocalDateTime createdAt;
 }

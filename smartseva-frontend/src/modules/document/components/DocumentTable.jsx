@@ -1,5 +1,6 @@
 import React from 'react';
 import DataTable from '../../../components/ui/DataTable';
+import { formatDateTime } from '../../../utils/dateUtils';
 
 export default function DocumentTable({
   documents = [],
@@ -16,11 +17,16 @@ export default function DocumentTable({
   ];
 
   const tableData = documents.map((doc) => ({
-    documentId: doc.documentId,
-    originalFileName: doc.originalFileName,
-    fileType: doc.fileType,
-    uploadedByName: doc.uploadedByName,
-    uploadedAt: doc.uploadedAt,
+    documentId: `#${doc.documentId}`,
+    originalFileName: (
+      <span className="fw-semibold text-primary">
+        <i className="bi bi-file-earmark-text me-1"></i>
+        {doc.originalFileName}
+      </span>
+    ),
+    fileType: doc.fileType || 'Document',
+    uploadedByName: doc.uploadedByName || 'Staff',
+    uploadedAt: formatDateTime(doc.uploadedAt),
 
     actions: (
       <div className="d-flex gap-2">

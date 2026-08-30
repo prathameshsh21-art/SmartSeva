@@ -14,5 +14,8 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
     @EntityGraph(attributePaths = {"serviceOrder", "staff"})
     List<ActivityLog> findByOrderByTimestampDesc(Pageable pageable);
 
+    @EntityGraph(attributePaths = {"serviceOrder", "staff"})
+    org.springframework.data.domain.Page<ActivityLog> findAllByOrderByTimestampDesc(Pageable pageable);
+
     List<ActivityLog> findByServiceOrderServiceId(Long serviceId);
 }

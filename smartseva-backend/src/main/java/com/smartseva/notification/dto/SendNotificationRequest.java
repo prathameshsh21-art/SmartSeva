@@ -1,18 +1,28 @@
 package com.smartseva.notification.dto;
 
 import com.smartseva.notification.entity.NotificationType;
-import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SendNotificationRequest {
-    @NotNull(message = "Service ID is required")
+
+    private Long customerId;
+
     private Long serviceId;
 
-    @NotNull(message = "Notification type is required")
     private NotificationType notificationType;
+
+    private List<NotificationType> channels;
+
+    private String message;
 
     private List<Long> documentIdsToShare;
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import SearchBar from '../../../components/common/SearchBar';
 import Pagination from '../../../components/common/Pagination';
@@ -9,92 +10,62 @@ import { customerService } from '../../../api/services/customerService';
 
 export default function CustomerList() {
 
+    const navigate = useNavigate();
+
     const [search, setSearch] = useState('');
     const [customers, setCustomers] = useState([]);
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
     const [showModal, setShowModal] = useState(false);
+    const [editingCustomer, setEditingCustomer] = useState(null);
 
 
     // =========================
     // LOAD CUSTOMERS
     // =========================
 
-    const loadCustomers = async () => {
+    const loadCustomers = async (pageNumber = page, searchQuery = search) => {
+        setLoading(true);
+        setError(null);
 
         try {
-
-            const response =
-                await customerService.search(search);
-
-            console.log(
-                'Customer API Response:',
-                response
-            );
-
-            /*
-             * Axios interceptor returns response.data.
-             *
-             * Therefore response is:
-             *
-             * {
-             *   success: true,
-             *   message: "...",
-             *   data: {
-             *      content: [...]
-             *   }
-             * }
-             */
+            const response = searchQuery && searchQuery.trim() !== ''
+                ? await customerService.search(searchQuery.trim(), pageNumber, 10)
+                : await customerService.getAll(pageNumber, 10);
 
             const pageData = response?.data;
 
-            if (!pageData) {
-
-                setCustomers([]);
-
-                return;
-            }
-
-
-            /*
-             * Spring Page response
-             */
-
-            if (Array.isArray(pageData.content)) {
-
+            if (pageData && Array.isArray(pageData.content)) {
                 setCustomers(pageData.content);
-
+                setTotalPages(pageData.totalPages || 1);
             } else if (Array.isArray(pageData)) {
-
                 setCustomers(pageData);
-
+                setTotalPages(1);
             } else {
-
                 setCustomers([]);
-
+                setTotalPages(1);
             }
 
-        } catch (error) {
-
-            console.error(
-                'Failed to load customers:',
-                error
-            );
-
+        } catch (err) {
+            console.error('Failed to load customers:', err);
+            setError('Failed to load customer records.');
             setCustomers([]);
-
+        } finally {
+            setLoading(false);
         }
-
     };
 
 
     // =========================
-    // INITIAL LOAD
+    // INITIAL LOAD & PAGE EFFECT
     // =========================
 
     useEffect(() => {
-
-        loadCustomers();
-
-    }, []);
+        loadCustomers(page, search);
+    }, [page]);
 
 
     // =========================
@@ -102,130 +73,52 @@ export default function CustomerList() {
     // =========================
 
     const handleSearch = async (value) => {
-
         setSearch(value);
-
-        try {
-
-            const response =
-                await customerService.search(value);
-
-            console.log(
-                'Search Response:',
-                response
-            );
-
-            const pageData = response?.data;
-
-            if (!pageData) {
-
-                setCustomers([]);
-
-                return;
-            }
-
-
-            if (Array.isArray(pageData.content)) {
-
-                setCustomers(pageData.content);
-
-            } else if (Array.isArray(pageData)) {
-
-                setCustomers(pageData);
-
-            } else {
-
-                setCustomers([]);
-
-            }
-
-        } catch (error) {
-
-            console.error(
-                'Search failed:',
-                error
-            );
-
-            setCustomers([]);
-
-        }
-
+        setPage(0);
+        await loadCustomers(0, value);
     };
 
 
     // =========================
-    // OPEN ADD CUSTOMER MODAL
+    // ADD CUSTOMER
     // =========================
 
     const handleAddCustomer = () => {
-
+        setEditingCustomer(null);
         setShowModal(true);
-
     };
 
 
     // =========================
-    // SAVE CUSTOMER
+    // SAVE / UPDATE CUSTOMER
     // =========================
 
     const handleSaveCustomer = async (data) => {
-
         try {
-
-            console.log(
-                'Data going to backend:',
-                data
-            );
-
-            const response =
-                await customerService.create(data);
-
-            console.log(
-                'Create Response:',
-                response
-            );
-
-
-            if (response?.success === false) {
-
-                alert(
-                    response.message ||
-                    'Customer creation failed'
-                );
-
-                return;
+            if (editingCustomer) {
+                const response = await customerService.update(editingCustomer.customerId, data);
+                if (response?.success === false) {
+                    alert(response.message || 'Customer update failed');
+                    return;
+                }
+                alert('Customer updated successfully!');
+            } else {
+                const response = await customerService.create(data);
+                if (response?.success === false) {
+                    alert(response.message || 'Customer creation failed');
+                    return;
+                }
+                alert('Customer registered successfully!');
             }
 
-
-            alert(
-                'Customer registered successfully!'
-            );
-
-
             setShowModal(false);
+            setEditingCustomer(null);
+            await loadCustomers(page, search);
 
-
-            /*
-             * Reload customer list
-             */
-
-            await loadCustomers();
-
-
-        } catch (error) {
-
-            console.error(
-                'Customer creation failed:',
-                error
-            );
-
-            alert(
-                error?.message ||
-                'Failed to register customer'
-            );
-
+        } catch (err) {
+            console.error('Customer save failed:', err);
+            alert(err?.message || 'Failed to save customer');
         }
-
     };
 
 
@@ -234,21 +127,9 @@ export default function CustomerList() {
     // =========================
 
     const handleView = (customer) => {
-
-        alert(
-            `Customer Details\n\n` +
-            `Customer ID: ${customer.customerId}\n` +
-            `Name: ${customer.fullName}\n` +
-            `Phone: ${customer.phoneNumber}\n` +
-            `Date of Birth: ${customer.dateOfBirth || '-'}\n` +
-            `Email: ${customer.email || '-'}\n` +
-            `Status: ${
-                customer.isArchived
-                    ? 'ARCHIVED'
-                    : 'ACTIVE'
-            }`
-        );
-
+        if (customer?.customerId) {
+            navigate(`/customers/${customer.customerId}`);
+        }
     };
 
 
@@ -257,13 +138,8 @@ export default function CustomerList() {
     // =========================
 
     const handleEdit = (customer) => {
-
-        alert(
-            `Edit Customer\n\n` +
-            `Customer ID: ${customer.customerId}\n` +
-            `Name: ${customer.fullName}`
-        );
-
+        setEditingCustomer(customer);
+        setShowModal(true);
     };
 
 
@@ -272,86 +148,36 @@ export default function CustomerList() {
     // =========================
 
     const handleDelete = async (id) => {
-
-        const confirmDelete =
-            window.confirm(
-                'Are you sure you want to archive this customer?'
-            );
+        const confirmDelete = window.confirm(
+            'Are you sure you want to archive this customer?'
+        );
 
         if (!confirmDelete) {
-
             return;
-
         }
 
-
         try {
-
-            const response =
-                await customerService.delete(id);
-
-            console.log(
-                'Delete Response:',
-                response
-            );
-
-
+            const response = await customerService.delete(id);
             if (response?.success === false) {
-
-                alert(
-                    response.message ||
-                    'Failed to archive customer'
-                );
-
+                alert(response.message || 'Failed to archive customer');
                 return;
             }
 
+            alert('Customer archived successfully!');
+            await loadCustomers(page, search);
 
-            alert(
-                'Customer archived successfully!'
-            );
-
-
-            /*
-             * Reload list after deletion
-             */
-
-            await loadCustomers();
-
-
-        } catch (error) {
-
-            console.error(
-                'Delete failed:',
-                error
-            );
-
-            alert(
-                error?.message ||
-                'Failed to archive customer'
-            );
-
+        } catch (err) {
+            console.error('Delete failed:', err);
+            alert(err?.message || 'Failed to archive customer');
         }
-
     };
 
 
     return (
-
         <div>
-
-
-            {/* =========================
-                HEADER
-            ========================= */}
-
+            {/* HEADER */}
             <div className="d-flex justify-content-between align-items-center mb-3">
-
-                <h3 className="fw-bold">
-                    Customer Directory
-                </h3>
-
-
+                <h3 className="fw-bold">Customer Directory</h3>
                 <button
                     type="button"
                     className="btn btn-primary"
@@ -359,56 +185,54 @@ export default function CustomerList() {
                 >
                     + Add Customer
                 </button>
-
             </div>
 
-
-            {/* =========================
-                SEARCH
-            ========================= */}
-
+            {/* SEARCH */}
             <SearchBar
                 value={search}
                 onChange={handleSearch}
-                placeholder="Search customers..."
+                placeholder="Search by name or phone..."
             />
 
+            {error && (
+                <div className="alert alert-danger" role="alert">
+                    {error}
+                </div>
+            )}
 
-            {/* =========================
-                CUSTOMER TABLE
-            ========================= */}
+            {/* CUSTOMER TABLE */}
+            {loading ? (
+                <div className="text-center py-4">
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            ) : (
+                <CustomerTable
+                    customers={customers}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                />
+            )}
 
-            <CustomerTable
-                customers={customers}
-                onView={handleView}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-            />
-
-
-            {/* =========================
-                PAGINATION
-            ========================= */}
-
+            {/* PAGINATION */}
             <Pagination
-                page={0}
-                totalPages={1}
-                onPageChange={() => {}}
+                page={page}
+                totalPages={totalPages}
+                onPageChange={(newPage) => setPage(newPage)}
             />
 
-
-            {/* =========================
-                ADD CUSTOMER MODAL
-            ========================= */}
-
+            {/* ADD / EDIT CUSTOMER MODAL */}
             <AddCustomerModal
                 show={showModal}
-                onClose={() => setShowModal(false)}
+                initialData={editingCustomer}
+                onClose={() => {
+                    setShowModal(false);
+                    setEditingCustomer(null);
+                }}
                 onSave={handleSaveCustomer}
             />
-
         </div>
-
     );
-
 }

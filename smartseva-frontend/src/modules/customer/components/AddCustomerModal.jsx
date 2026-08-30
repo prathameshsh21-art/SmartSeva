@@ -3,15 +3,41 @@ import React, { useState } from 'react';
 export default function AddCustomerModal({
     show,
     onClose,
-    onSave
+    onSave,
+    onSubmit,
+    initialData = null
 }) {
 
     const [formData, setFormData] = useState({
-        fullName: '',
-        phoneNumber: '',
-        dateOfBirth: '',
-        email: ''
+        fullName: initialData?.fullName || '',
+        phoneNumber: initialData?.phoneNumber || '',
+        dateOfBirth: initialData?.dateOfBirth || '',
+        email: initialData?.email || '',
+        address: initialData?.address || '',
+        notes: initialData?.notes || ''
     });
+
+    React.useEffect(() => {
+        if (initialData) {
+            setFormData({
+                fullName: initialData.fullName || '',
+                phoneNumber: initialData.phoneNumber || '',
+                dateOfBirth: initialData.dateOfBirth || '',
+                email: initialData.email || '',
+                address: initialData.address || '',
+                notes: initialData.notes || ''
+            });
+        } else {
+            setFormData({
+                fullName: '',
+                phoneNumber: '',
+                dateOfBirth: '',
+                email: '',
+                address: '',
+                notes: ''
+            });
+        }
+    }, [initialData, show]);
 
 
     const handleChange = (e) => {
@@ -38,7 +64,10 @@ export default function AddCustomerModal({
             formData
         );
 
-        await onSave(formData);
+        const saveHandler = onSave || onSubmit;
+        if (saveHandler) {
+            await saveHandler(formData);
+        }
 
         setFormData({
             fullName: '',
@@ -73,7 +102,7 @@ export default function AddCustomerModal({
                     <div className="modal-header">
 
                         <h5 className="modal-title fw-bold">
-                            Register New Customer
+                            {initialData ? 'Edit Customer' : 'Register New Customer'}
                         </h5>
 
                         <button
@@ -182,7 +211,7 @@ export default function AddCustomerModal({
                                 type="submit"
                                 className="btn btn-primary"
                             >
-                                Save Customer
+                                {initialData ? 'Update Customer' : 'Save Customer'}
                             </button>
 
                         </div>

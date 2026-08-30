@@ -36,6 +36,30 @@ public class CustomerController {
     }
 
 
+    // GET ALL CUSTOMERS (PAGINATED)
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<CustomerDTO>>> getAllCustomers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<CustomerDTO> result =
+                customerService.getAllCustomers(
+                        PageRequest.of(
+                                page,
+                                size,
+                                Sort.by("fullName").ascending()
+                        )
+                );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Customers retrieved successfully",
+                        result
+                )
+        );
+    }
+
+
     // GET CUSTOMER BY ID
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<CustomerDTO>> getCustomerById(

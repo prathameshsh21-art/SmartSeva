@@ -4,50 +4,58 @@ import MetricCard from '../../../components/ui/MetricCard';
 export default function DashboardCards({
   stats = {
     totalCustomers: 0,
-    activeServices: 0,
+    totalServices: 0,
     pendingServices: 0,
-    totalStaff: 0,
+    completedToday: 0,
+    documentsUploaded: 0,
   },
 }) {
   return (
     <div className="row g-4 mb-4">
-
-      <div className="col-md-6 col-xl-3">
+      <div className="col-sm-6 col-xl">
         <MetricCard
-          title="Customers"
-          value={stats.totalCustomers}
+          title="Total Customers"
+          value={stats.totalCustomers ?? 0}
           iconClass="bi bi-people-fill"
           colorClass="text-primary"
         />
       </div>
 
-      <div className="col-md-6 col-xl-3">
+      <div className="col-sm-6 col-xl">
         <MetricCard
-          title="Active Services"
-          value={stats.activeServices}
+          title="Total Services"
+          value={stats.totalServices ?? 0}
           iconClass="bi bi-briefcase-fill"
-          colorClass="text-success"
+          colorClass="text-info"
         />
       </div>
 
-      <div className="col-md-6 col-xl-3">
+      <div className="col-sm-6 col-xl">
         <MetricCard
           title="Pending Services"
-          value={stats.pendingServices}
+          value={stats.pendingServices ?? 0}
           iconClass="bi bi-hourglass-split"
           colorClass="text-warning"
         />
       </div>
 
-      <div className="col-md-6 col-xl-3">
+      <div className="col-sm-6 col-xl">
         <MetricCard
-          title="Staff Members"
-          value={stats.totalStaff}
-          iconClass="bi bi-person-badge-fill"
-          colorClass="text-danger"
+          title="Completed Today"
+          value={stats.completedToday ?? 0}
+          iconClass="bi bi-check-circle-fill"
+          colorClass="text-success"
         />
       </div>
 
+      <div className="col-sm-6 col-xl">
+        <MetricCard
+          title="Docs Uploaded"
+          value={stats.documentsUploaded ?? 0}
+          iconClass="bi bi-folder-fill"
+          colorClass="text-secondary"
+        />
+      </div>
     </div>
   );
 }

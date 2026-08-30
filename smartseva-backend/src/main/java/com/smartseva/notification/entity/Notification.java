@@ -21,8 +21,8 @@ public class Notification {
     @Column(name = "notification_id")
     private Long notificationId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "service_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_id")
     private ServiceOrder serviceOrder;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -42,6 +42,12 @@ public class Notification {
 
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
+
+    @Column(name = "failure_reason", length = 500)
+    private String failureReason;
+
+    @Column(name = "message_content", length = 2000)
+    private String messageContent;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

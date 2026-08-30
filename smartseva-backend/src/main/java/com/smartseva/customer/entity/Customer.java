@@ -41,6 +41,7 @@ public class Customer extends Auditable {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
+    @Builder.Default
     @Column(name = "is_archived", nullable = false)
     private boolean isArchived = false;
 

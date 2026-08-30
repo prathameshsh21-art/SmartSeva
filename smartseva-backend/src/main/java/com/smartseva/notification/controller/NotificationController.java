@@ -10,6 +10,10 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
 @RestController
 @RequestMapping("/api/notifications")
 public class NotificationController {
@@ -18,6 +22,15 @@ public class NotificationController {
 
     public NotificationController(NotificationService notificationService) {
         this.notificationService = notificationService;
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<NotificationDTO>>> getAllNotifications(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<NotificationDTO> result = notificationService.getAllNotifications(
+                PageRequest.of(page, size, Sort.by("createdAt").descending()));
+        return ResponseEntity.ok(ApiResponse.success("Notifications retrieved successfully", result));
     }
 
     @PostMapping("/send")

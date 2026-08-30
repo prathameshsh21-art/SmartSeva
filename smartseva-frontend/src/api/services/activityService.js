@@ -7,6 +7,6 @@ export const activityService = {
 
   getAll: (page = 0, size = 10) =>
     axiosInstance.get(
-      `${API_ENDPOINTS.ACTIVITIES.RECENT}?page=${page}&size=${size}`
+      `${API_ENDPOINTS.ACTIVITIES.BASE}?page=${page}&size=${size}`
     ),
 };

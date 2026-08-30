@@ -6,7 +6,9 @@ import com.smartseva.activity.repository.ActivityLogRepository;
 import com.smartseva.servicecatalog.entity.ServiceOrder;
 import com.smartseva.staff.entity.Staff;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,29 +38,39 @@ public class ActivityLogService {
     }
 
     @Transactional(readOnly = true)
-    public List<ActivityLogDTO> getRecentActivities() {
+    public Page<ActivityLogDTO> getAllActivities(Pageable pageable) {
+        return activityLogRepository
+                .findAllByOrderByTimestampDesc(pageable)
+                .map(this::mapToDTO);
+    }
 
+    @Transactional(readOnly = true)
+    public List<ActivityLogDTO> getRecentActivities() {
         return activityLogRepository
                 .findByOrderByTimestampDesc(PageRequest.of(0, 10))
                 .stream()
-                .map(activity -> ActivityLogDTO.builder()
-                        .activityId(activity.getActivityId())
-                        .action(activity.getAction())
-                        .description(activity.getDescription())
-                        .timestamp(activity.getTimestamp())
-                        .serviceId(activity.getServiceOrder() != null
-                                ? activity.getServiceOrder().getServiceId()
-                                : null)
-                        .serviceName(activity.getServiceOrder() != null
-                                ? activity.getServiceOrder().getServiceName()
-                                : null)
-                        .staffId(activity.getStaff() != null
-                                ? activity.getStaff().getStaffId()
-                                : null)
-                        .staffName(activity.getStaff() != null
-                                ? activity.getStaff().getFullName()
-                                : null)
-                        .build())
+                .map(this::mapToDTO)
                 .toList();
+    }
+
+    private ActivityLogDTO mapToDTO(ActivityLog activity) {
+        return ActivityLogDTO.builder()
+                .activityId(activity.getActivityId())
+                .action(activity.getAction())
+                .description(activity.getDescription())
+                .timestamp(activity.getTimestamp())
+                .serviceId(activity.getServiceOrder() != null
+                        ? activity.getServiceOrder().getServiceId()
+                        : null)
+                .serviceName(activity.getServiceOrder() != null
+                        ? activity.getServiceOrder().getServiceName()
+                        : null)
+                .staffId(activity.getStaff() != null
+                        ? activity.getStaff().getStaffId()
+                        : null)
+                .staffName(activity.getStaff() != null
+                        ? activity.getStaff().getFullName()
+                        : null)
+                .build();
     }
 }

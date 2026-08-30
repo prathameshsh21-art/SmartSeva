@@ -41,6 +41,12 @@ public class ServiceOrder {
     @Column(name = "application_number", length = 100)
     private String applicationNumber;
 
+    @Column(name = "portal_login_id", length = 100)
+    private String portalLoginId;
+
+    @Column(name = "encrypted_portal_password", length = 500)
+    private String encryptedPortalPassword;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ServiceStatus status;

@@ -30,9 +30,9 @@ export const customerService = {
             `${API_ENDPOINTS.CUSTOMERS.BASE}/${id}`
         ),
 
-    search: (query = "") =>
+    search: (query = "", page = 0, size = 10) =>
         axiosInstance.get(
-            `${API_ENDPOINTS.CUSTOMERS.SEARCH}?query=${encodeURIComponent(query)}`
+            `${API_ENDPOINTS.CUSTOMERS.SEARCH}?query=${encodeURIComponent(query)}&page=${page}&size=${size}`
         )
 
 };

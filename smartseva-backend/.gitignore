@@ -1,0 +1,13 @@
+/.apt_generated/
+/.apt_generated_tests/
+/target/
+/logs/
+/uploads/
+.env
+.env.*
+!.env.example
+.classpath
+.project
+.settings/
+.idea/
+*.iml

@@ -1,5 +1,6 @@
 package com.smartseva.customer.service;
 
+import com.smartseva.common.exception.BadRequestException;
 import com.smartseva.common.exception.ResourceNotFoundException;
 import com.smartseva.customer.dto.CustomerDTO;
 import com.smartseva.customer.entity.Customer;
@@ -136,6 +137,18 @@ public class CustomerService {
 
 
     // =====================================================
+    // GET ALL ACTIVE CUSTOMERS (PAGINATED)
+    // =====================================================
+
+    @Transactional(readOnly = true)
+    public Page<CustomerDTO> getAllCustomers(Pageable pageable) {
+        return customerRepository
+                .findByIsArchivedFalse(pageable)
+                .map(customerMapper::toDTO);
+    }
+
+
+    // =====================================================
     // SEARCH CUSTOMERS
     // =====================================================
 
@@ -161,7 +174,6 @@ public class CustomerService {
 
         Customer customer =
                 customerRepository.findById(id)
-
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Customer",
@@ -170,10 +182,24 @@ public class CustomerService {
                                 )
                         );
 
-
         customer.setFullName(
                 dto.getFullName()
         );
+
+        if (dto.getPhoneNumber() != null && !dto.getPhoneNumber().trim().isEmpty()) {
+            String newPhone = dto.getPhoneNumber().trim();
+            Optional<Customer> existingWithPhone = customerRepository.findByPhoneNumber(newPhone);
+            if (existingWithPhone.isPresent() && !existingWithPhone.get().getCustomerId().equals(id)) {
+                throw new BadRequestException("Phone number " + newPhone + " is already registered to another customer.");
+            }
+            customer.setPhoneNumber(newPhone);
+        }
+
+        if (dto.getDateOfBirth() != null) {
+            customer.setDateOfBirth(
+                    dto.getDateOfBirth()
+            );
+        }
 
         customer.setEmail(
                 dto.getEmail()
@@ -186,7 +212,6 @@ public class CustomerService {
         customer.setNotes(
                 dto.getNotes()
         );
-
 
         return customerMapper.toDTO(
                 customerRepository.save(customer)

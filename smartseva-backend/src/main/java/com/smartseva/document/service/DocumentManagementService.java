@@ -12,6 +12,8 @@ import com.smartseva.staff.repository.StaffRepository;
 import com.smartseva.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -66,6 +68,12 @@ public class DocumentManagementService {
     }
 
     @Transactional(readOnly = true)
+    public Page<DocumentDTO> getAllDocuments(Pageable pageable) {
+        return documentRepository.findByDeletedFalse(pageable)
+                .map(this::mapToDTO);
+    }
+
+    @Transactional(readOnly = true)
     public List<DocumentDTO> getDocumentsForService(Long serviceId) {
         return documentRepository.findByServiceOrderServiceIdAndDeletedFalse(serviceId)
                 .stream().map(this::mapToDTO).collect(Collectors.toList());
@@ -88,16 +96,19 @@ public class DocumentManagementService {
     }
 
     private DocumentDTO mapToDTO(Document entity) {
+        if (entity == null) {
+            return null;
+        }
         return DocumentDTO.builder()
                 .documentId(entity.getDocumentId())
-                .serviceId(entity.getServiceOrder().getServiceId())
+                .serviceId(entity.getServiceOrder() != null ? entity.getServiceOrder().getServiceId() : null)
                 .originalFileName(entity.getOriginalFileName())
                 .storedFileName(entity.getStoredFileName())
                 .fileType(entity.getFileType())
                 .fileSize(entity.getFileSize())
                 .uploadedAt(entity.getUploadedAt())
-                .uploadedById(entity.getUploadedBy().getStaffId())
-                .uploadedByName(entity.getUploadedBy().getFullName())
+                .uploadedById(entity.getUploadedBy() != null ? entity.getUploadedBy().getStaffId() : null)
+                .uploadedByName(entity.getUploadedBy() != null ? entity.getUploadedBy().getFullName() : "System")
                 .deleted(entity.isDeleted())
                 .build();
     }

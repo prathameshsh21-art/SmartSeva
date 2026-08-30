@@ -29,4 +29,5 @@ smartseva-frontend/.env.*
 *.log
 *.tmp
 .DS_Store
-Thumbs.db
+Thumbs.dbsmartseva-backend.zip
+smartseva-frontend.zip

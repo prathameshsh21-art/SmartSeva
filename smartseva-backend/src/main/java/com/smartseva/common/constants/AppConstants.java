@@ -16,6 +16,14 @@ public final class AppConstants {
 
     public static final long MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
     public static final String[] ALLOWED_FILE_EXTENSIONS = {"pdf", "jpg", "jpeg", "png", "docx"};
+    public static final String[] ALLOWED_MIME_TYPES = {
+            "application/pdf",
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/msword"
+    };
 
     public static final String NOTIFICATION_EMAIL_SUBJECT = "Application Status Update - SmartSeva";
 }

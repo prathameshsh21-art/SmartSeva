@@ -29,4 +29,6 @@ public interface ServiceOrderRepository extends JpaRepository<ServiceOrder, Long
     Page<ServiceOrder> searchServices(@Param("query") String query, Pageable pageable);
 
     Page<ServiceOrder> findByStatus(ServiceStatus status, Pageable pageable);
+
+    Page<ServiceOrder> findByStatusNot(ServiceStatus status, Pageable pageable);
 }

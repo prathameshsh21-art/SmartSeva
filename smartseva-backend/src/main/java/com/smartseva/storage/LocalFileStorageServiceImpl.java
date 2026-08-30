@@ -8,9 +8,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.smartseva.common.constants.AppConstants;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.*;
+import java.util.Arrays;
 import java.util.UUID;
 
 @Service
@@ -29,24 +32,58 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
 
     @Override
     public String storeFile(MultipartFile file, String subFolder) {
+        if (file == null || file.isEmpty()) {
+            throw new FileStorageException("Cannot upload an empty file");
+        }
+
+        if (file.getSize() > AppConstants.MAX_FILE_SIZE_BYTES) {
+            throw new FileStorageException("File size exceeds maximum limit of 20MB");
+        }
+
         String originalFileName = StringUtils.cleanPath(file.getOriginalFilename() != null ? file.getOriginalFilename() : "file");
 
-        if (originalFileName.contains("..")) {
+        if (originalFileName.contains("..") || originalFileName.contains("/") || originalFileName.contains("\\")) {
             throw new FileStorageException("Filename contains invalid path sequence: " + originalFileName);
         }
 
-        String extension = "";
+        String extStr = "";
         int i = originalFileName.lastIndexOf('.');
         if (i > 0) {
-            extension = originalFileName.substring(i);
+            extStr = originalFileName.substring(i + 1).toLowerCase();
+        }
+        final String extension = extStr;
+
+        // Validate file extension
+        boolean isAllowedExt = Arrays.stream(AppConstants.ALLOWED_FILE_EXTENSIONS)
+                .anyMatch(ext -> ext.equalsIgnoreCase(extension));
+        if (!isAllowedExt) {
+            throw new FileStorageException("File extension ." + extension + " is not allowed. Allowed: " + Arrays.toString(AppConstants.ALLOWED_FILE_EXTENSIONS));
         }
 
-        String storedFileName = UUID.randomUUID().toString() + extension;
-        Path targetFolder = this.fileStorageLocation.resolve(subFolder);
+        // Validate Content-Type / MIME type
+        String contentType = file.getContentType();
+        if (contentType != null && !contentType.isBlank()) {
+            boolean isAllowedMime = Arrays.stream(AppConstants.ALLOWED_MIME_TYPES)
+                    .anyMatch(mime -> mime.equalsIgnoreCase(contentType.trim()));
+            if (!isAllowedMime) {
+                throw new FileStorageException("File MIME type " + contentType + " is not permitted.");
+            }
+        }
+
+        if (subFolder.contains("..")) {
+            throw new FileStorageException("Invalid subfolder path sequence");
+        }
+
+        String storedFileName = UUID.randomUUID() + (extension.isEmpty() ? "" : "." + extension);
+        Path targetFolder = this.fileStorageLocation.resolve(subFolder).normalize();
+
+        if (!targetFolder.startsWith(this.fileStorageLocation)) {
+            throw new FileStorageException("Directory traversal attempt detected");
+        }
 
         try {
             Files.createDirectories(targetFolder);
-            Path targetLocation = targetFolder.resolve(storedFileName);
+            Path targetLocation = targetFolder.resolve(storedFileName).normalize();
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
             return subFolder + "/" + storedFileName;

@@ -95,11 +95,17 @@ export default function Login() {
 
             <button
               type="submit"
-              className="btn btn-primary w-100"
+              className="btn btn-primary w-100 mb-3"
               disabled={loading}
             >
               {loading ? 'Signing In...' : 'Login'}
             </button>
+
+            <div className="text-center border-top pt-3">
+              <a href="/verify" className="text-decoration-none small text-secondary">
+                <i className="bi bi-shield-check me-1"></i> Citizen Document Verification Portal →
+              </a>
+            </div>
 
           </form>
 

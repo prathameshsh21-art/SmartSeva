@@ -47,6 +47,7 @@ public class Document {
     @JoinColumn(name = "uploaded_by", nullable = false)
     private Staff uploadedBy;
 
+    @Builder.Default
     @Column(name = "deleted", nullable = false)
     private boolean deleted = false;
 

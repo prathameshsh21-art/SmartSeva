@@ -5,6 +5,9 @@ import com.smartseva.document.dto.DocumentDTO;
 import com.smartseva.document.service.DocumentManagementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +24,15 @@ import java.util.List;
 public class DocumentController {
 
     private final DocumentManagementService documentService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<DocumentDTO>>> getAllDocuments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<DocumentDTO> result = documentService.getAllDocuments(
+                PageRequest.of(page, size, Sort.by("uploadedAt").descending()));
+        return ResponseEntity.ok(ApiResponse.success("Documents retrieved successfully", result));
+    }
 
     @PostMapping("/upload")
     public ResponseEntity<ApiResponse<DocumentDTO>> uploadDocument(

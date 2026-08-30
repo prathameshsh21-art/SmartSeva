@@ -30,6 +30,7 @@ public class ServiceTemplate extends Auditable {
     @Column(name = "suggested_documents", columnDefinition = "TEXT")
     private String suggestedDocuments;
 
+    @Builder.Default
     @Column(name = "active", nullable = false)
     private boolean active = true;
 }

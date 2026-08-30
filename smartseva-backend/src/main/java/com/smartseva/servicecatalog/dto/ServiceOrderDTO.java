@@ -1,5 +1,6 @@
 package com.smartseva.servicecatalog.dto;
 
+import com.smartseva.notification.dto.ChannelDeliveryResultDTO;
 import com.smartseva.servicecatalog.entity.PendingReason;
 import com.smartseva.servicecatalog.entity.ServiceStatus;
 import jakarta.validation.constraints.NotBlank;
@@ -10,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -22,6 +24,7 @@ public class ServiceOrderDTO {
     private Long customerId;
     private String customerName;
     private String customerPhone;
+    private String customerEmail;
 
     private Long staffId;
     private String staffName;
@@ -31,6 +34,9 @@ public class ServiceOrderDTO {
 
     private String portalLink;
     private String applicationNumber;
+    private String portalLoginId;
+    private String portalPassword;
+    private Boolean hasTemporaryPassword;
 
     private ServiceStatus status;
     private PendingReason pendingReason;
@@ -39,4 +45,8 @@ public class ServiceOrderDTO {
     private LocalDateTime createdDate;
     private LocalDateTime completedDate;
     private LocalDateTime archivedDate;
+
+    // Delivery results from multi-channel notifications
+    private List<ChannelDeliveryResultDTO> notificationResults;
+    private List<String> sharedDocumentNames;
 }
