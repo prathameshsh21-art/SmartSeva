@@ -8,10 +8,12 @@ import { serviceCatalogService } from '../../../api/services/serviceCatalogServi
 import { documentService } from '../../../api/services/documentService';
 import { formatDateTime } from '../../../utils/dateUtils';
 import { openSmsComposer, openWhatsApp } from '../../../utils/phoneUtils';
+import { useToast } from '../../../context/ToastContext';
 
 export default function ServiceDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showSuccess, showError, showInfo } = useToast();
 
   const [service, setService] = useState(null);
   const [documents, setDocuments] = useState([]);
@@ -61,7 +63,7 @@ export default function ServiceDetails() {
       setIsUpdatingStatus(true);
       const response = await serviceCatalogService.updateStatus(payload);
       if (response?.success === false) {
-        alert(response.message || 'Status update failed');
+        showError(response.message || 'Status update failed');
         return;
       }
       const data = response?.data || response;
@@ -94,12 +96,12 @@ export default function ServiceDetails() {
           alertMsg += `✓ ${doc} — Stored & Delivered\n`;
         });
       }
-      alert(alertMsg);
+      showSuccess(alertMsg, 'Service Status Updated');
       setShowStatusModal(false);
       await loadServiceDetails();
     } catch (err) {
       console.error('Failed to update service status:', err);
-      alert(err?.message || 'Failed to update service status');
+      showError(err?.message || 'Failed to update service status');
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -109,15 +111,15 @@ export default function ServiceDetails() {
     try {
       const response = await serviceCatalogService.update(id, formData);
       if (response?.success === false) {
-        alert(response.message || 'Failed to update service');
+        showError(response.message || 'Failed to update service');
         return;
       }
-      alert('Service updated successfully!');
+      showSuccess('Service updated successfully!');
       setShowEditModal(false);
       await loadServiceDetails();
     } catch (err) {
       console.error('Failed to edit service:', err);
-      alert(err?.message || 'Failed to update service');
+      showError(err?.message || 'Failed to update service');
     }
   };
 
@@ -134,7 +136,7 @@ export default function ServiceDetails() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Download error:', err);
-      alert('Failed to download document.');
+      showError('Failed to download document.');
     }
   };
 
@@ -142,11 +144,11 @@ export default function ServiceDetails() {
     if (!window.confirm(`Are you sure you want to delete "${doc.originalFileName}"?`)) return;
     try {
       await documentService.delete(doc.documentId);
-      alert('Document deleted successfully.');
+      showSuccess('Document deleted successfully.');
       await loadServiceDetails();
     } catch (err) {
       console.error('Delete error:', err);
-      alert('Failed to delete document.');
+      showError('Failed to delete document.');
     }
   };
 
@@ -267,7 +269,7 @@ export default function ServiceDetails() {
                         className="btn btn-outline-primary btn-sm py-0 px-2"
                         onClick={() => {
                           navigator.clipboard.writeText(service.portalPassword);
-                          alert('Temporary password copied to clipboard!');
+                          showSuccess('Temporary password copied to clipboard!');
                         }}
                         title="Copy password"
                       >
@@ -438,7 +440,7 @@ export default function ServiceDetails() {
         serviceId={service.serviceId}
         onClose={() => setShowUploadModal(false)}
         onUploadSuccess={() => {
-          alert('Document uploaded successfully!');
+          showSuccess('Document uploaded successfully!');
           loadServiceDetails();
         }}
       />

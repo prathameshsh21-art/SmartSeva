@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { serviceCatalogService } from '../../../api/services/serviceCatalogService';
 import axiosInstance from '../../../api/axiosInstance';
 import { API_ENDPOINTS } from '../../../api/endpoints';
+import { useToast } from '../../../context/ToastContext';
 
 export default function ServiceTemplates() {
+  const { showSuccess, showError } = useToast();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,10 +50,10 @@ export default function ServiceTemplates() {
     try {
       const res = await axiosInstance.post(API_ENDPOINTS.SERVICES.TEMPLATES, formData);
       if (res?.success === false) {
-        alert(res.message || 'Failed to create template');
+        showError(res.message || 'Failed to create template');
         return;
       }
-      alert('Service template created successfully!');
+      showSuccess('Service template created successfully!');
       setShowAddModal(false);
       setFormData({
         serviceName: '',
@@ -62,7 +64,7 @@ export default function ServiceTemplates() {
       await loadTemplates();
     } catch (err) {
       console.error('Create template failed:', err);
-      alert(err?.response?.data?.message || err?.message || 'Failed to create template');
+      showError(err?.response?.data?.message || err?.message || 'Failed to create template');
     }
   };
 

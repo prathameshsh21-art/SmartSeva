@@ -4,8 +4,10 @@ import FileUploadModal from '../components/FileUploadModal';
 import Pagination from '../../../components/common/Pagination';
 import { documentService } from '../../../api/services/documentService';
 import { serviceCatalogService } from '../../../api/services/serviceCatalogService';
+import { useToast } from '../../../context/ToastContext';
 
 export default function DocumentVault() {
+  const { showSuccess, showError } = useToast();
   const [documents, setDocuments] = useState([]);
   const [services, setServices] = useState([]);
   const [page, setPage] = useState(0);
@@ -69,7 +71,7 @@ export default function DocumentVault() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Download Error:', err);
-      alert('Failed to download document.');
+      showError('Failed to download document.');
     }
   };
 
@@ -81,11 +83,11 @@ export default function DocumentVault() {
 
     try {
       await documentService.delete(doc.documentId);
-      alert('Document deleted successfully.');
+      showSuccess('Document deleted successfully.');
       await loadDocuments(page);
     } catch (err) {
       console.error('Delete Error:', err);
-      alert('Failed to delete document.');
+      showError('Failed to delete document.');
     }
   };
 
@@ -132,7 +134,7 @@ export default function DocumentVault() {
         services={services}
         onClose={() => setShowUploadModal(false)}
         onUploadSuccess={() => {
-          alert('Document uploaded successfully!');
+          showSuccess('Document uploaded successfully!');
           loadDocuments(page);
         }}
       />

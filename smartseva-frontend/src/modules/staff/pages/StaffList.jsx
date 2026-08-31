@@ -3,8 +3,10 @@ import StaffTable from '../components/StaffTable';
 import StaffFormModal from '../components/StaffFormModal';
 import Pagination from '../../../components/common/Pagination';
 import { staffService } from '../../../api/services/staffService';
+import { useToast } from '../../../context/ToastContext';
 
 export default function StaffList() {
+  const { showSuccess, showError } = useToast();
   const [staffMembers, setStaffMembers] = useState([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -46,7 +48,7 @@ export default function StaffList() {
     if (response?.success === false) {
       throw new Error(response.message || 'Failed to create staff');
     }
-    alert('Staff account created successfully!');
+    showSuccess('Staff account created successfully!');
     await loadStaff(page);
   };
 
@@ -57,11 +59,11 @@ export default function StaffList() {
     }
     try {
       await staffService.updateStatus(staff.staffId, newStatus);
-      alert(`Staff status updated to ${newStatus}.`);
+      showSuccess(`Staff status updated to ${newStatus}.`);
       await loadStaff(page);
     } catch (err) {
       console.error('Status toggle failed:', err);
-      alert(err?.response?.data?.message || err?.message || 'Failed to update status');
+      showError(err?.response?.data?.message || err?.message || 'Failed to update status');
     }
   };
 
@@ -70,10 +72,10 @@ export default function StaffList() {
     if (!newPassword || newPassword.trim() === '') return;
     try {
       await staffService.resetPassword(staff.staffId, { newPassword: newPassword.trim() });
-      alert('Password reset successfully.');
+      showSuccess('Password reset successfully.');
     } catch (err) {
       console.error('Password reset failed:', err);
-      alert(err?.response?.data?.message || err?.message || 'Failed to reset password');
+      showError(err?.response?.data?.message || err?.message || 'Failed to reset password');
     }
   };
 

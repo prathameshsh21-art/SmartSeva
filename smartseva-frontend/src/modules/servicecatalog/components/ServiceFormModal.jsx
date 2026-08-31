@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { serviceCatalogService } from '../../../api/services/serviceCatalogService';
 import { customerService } from '../../../api/services/customerService';
+import { useToast } from '../../../context/ToastContext';
 
 export default function ServiceFormModal({
   show,
@@ -9,6 +10,7 @@ export default function ServiceFormModal({
   customer = null,
   initialData = null,
 }) {
+  const { showWarning } = useToast();
   const [formData, setFormData] = useState({
     customerId: '',
     serviceName: '',
@@ -139,11 +141,11 @@ export default function ServiceFormModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.customerId) {
-      alert('Please select or assign a customer for this service order.');
+      showWarning('Please select or assign a customer for this service order.');
       return;
     }
     if (!formData.serviceName.trim()) {
-      alert('Please enter or select a service name.');
+      showWarning('Please enter or select a service name.');
       return;
     }
     const isPending =

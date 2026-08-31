@@ -8,9 +8,11 @@ import ServiceFormModal from '../components/ServiceFormModal';
 import { serviceCatalogService } from '../../../api/services/serviceCatalogService';
 
 import { openSmsComposer, openWhatsApp } from '../../../utils/phoneUtils';
+import { useToast } from '../../../context/ToastContext';
 
 export default function ServiceList() {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
 
   const [search, setSearch] = useState('');
   const [services, setServices] = useState([]);
@@ -79,7 +81,7 @@ export default function ServiceList() {
       setIsUpdatingStatus(true);
       const response = await serviceCatalogService.updateStatus(payload);
       if (response?.success === false) {
-        alert(response.message || 'Status update failed');
+        showError(response.message || 'Status update failed');
         return;
       }
       const data = response?.data || response;
@@ -112,13 +114,13 @@ export default function ServiceList() {
           alertMsg += `✓ ${doc} — Stored & Delivered\n`;
         });
       }
-      alert(alertMsg);
+      showSuccess(alertMsg, 'Service Status Updated');
       setShowStatusModal(false);
       setSelectedService(null);
       await loadServices(page, search);
     } catch (err) {
       console.error('Failed to update service status:', err);
-      alert(err?.message || 'Failed to update service status');
+      showError(err?.message || 'Failed to update service status');
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -128,15 +130,15 @@ export default function ServiceList() {
     try {
       const response = await serviceCatalogService.create(formData);
       if (response?.success === false) {
-        alert(response.message || 'Failed to create service order');
+        showError(response.message || 'Failed to create service order');
         return;
       }
-      alert('Service order created successfully!');
+      showSuccess('Service order created successfully!');
       setShowCreateModal(false);
       await loadServices(0, search);
     } catch (err) {
       console.error('Service creation failed:', err);
-      alert(err?.message || 'Failed to create service order');
+      showError(err?.message || 'Failed to create service order');
     }
   };
 

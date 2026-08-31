@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { documentService } from '../../../api/services/documentService';
 import { formatDateTime } from '../../../utils/dateUtils';
+import { useToast } from '../../../context/ToastContext';
 
 export default function PublicDocumentVerification() {
+  const { showError } = useToast();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [loading, setLoading] = useState(false);
@@ -63,7 +65,7 @@ export default function PublicDocumentVerification() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Download failed:', err);
-      alert('Failed to download document. The token may have expired. Please verify again.');
+      showError('Failed to download document. The token may have expired. Please verify again.');
     } finally {
       setDownloadingId(null);
     }

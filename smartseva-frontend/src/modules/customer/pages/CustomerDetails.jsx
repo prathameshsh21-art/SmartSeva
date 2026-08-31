@@ -10,10 +10,12 @@ import { customerService } from '../../../api/services/customerService';
 import { serviceCatalogService } from '../../../api/services/serviceCatalogService';
 import { formatDate, formatDateTime } from '../../../utils/dateUtils';
 import { openSmsComposer, openWhatsApp } from '../../../utils/phoneUtils';
+import { useToast } from '../../../context/ToastContext';
 
 export default function CustomerDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
 
   const [customer, setCustomer] = useState(null);
   const [services, setServices] = useState([]);
@@ -79,15 +81,15 @@ export default function CustomerDetails() {
     try {
       const response = await customerService.update(id, formData);
       if (response?.success === false) {
-        alert(response.message || 'Failed to update customer');
+        showError(response.message || 'Failed to update customer');
         return;
       }
-      alert('Customer updated successfully!');
+      showSuccess('Customer updated successfully!');
       setShowEditCustomerModal(false);
       await fetchCustomer();
     } catch (err) {
       console.error('Failed to update customer:', err);
-      alert(err?.message || 'Failed to update customer');
+      showError(err?.message || 'Failed to update customer');
     }
   };
 
@@ -99,15 +101,15 @@ export default function CustomerDetails() {
       };
       const response = await serviceCatalogService.create(payload);
       if (response?.success === false) {
-        alert(response.message || 'Failed to create service order');
+        showError(response.message || 'Failed to create service order');
         return;
       }
-      alert('Service order created successfully!');
+      showSuccess('Service order created successfully!');
       setShowCreateServiceModal(false);
       await fetchCustomerServices();
     } catch (err) {
       console.error('Failed to create service order:', err);
-      alert(err?.message || 'Failed to create service order');
+      showError(err?.message || 'Failed to create service order');
     }
   };
 
@@ -118,7 +120,7 @@ export default function CustomerDetails() {
       setIsUpdatingStatus(true);
       const response = await serviceCatalogService.updateStatus(payload);
       if (response?.success === false) {
-        alert(response.message || 'Status update failed');
+        showError(response.message || 'Status update failed');
         return;
       }
       const data = response?.data || response;
@@ -151,13 +153,13 @@ export default function CustomerDetails() {
           alertMsg += `✓ ${doc} — Stored & Delivered\n`;
         });
       }
-      alert(alertMsg);
+      showSuccess(alertMsg, 'Service Status Updated');
       setShowStatusModal(false);
       setSelectedService(null);
       await fetchCustomerServices();
     } catch (err) {
       console.error('Failed to update service status:', err);
-      alert(err?.message || 'Failed to update service status');
+      showError(err?.message || 'Failed to update service status');
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -474,7 +476,7 @@ export default function CustomerDetails() {
           setSelectedService(null);
         }}
         onUploadSuccess={() => {
-          alert('Document uploaded successfully!');
+          showSuccess('Document uploaded successfully!');
           fetchCustomerServices();
         }}
       />

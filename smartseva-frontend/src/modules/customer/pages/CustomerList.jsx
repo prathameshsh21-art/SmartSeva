@@ -5,12 +5,14 @@ import SearchBar from '../../../components/common/SearchBar';
 import Pagination from '../../../components/common/Pagination';
 import CustomerTable from '../components/CustomerTable';
 import AddCustomerModal from '../components/AddCustomerModal';
+import { useToast } from '../../../context/ToastContext';
 
 import { customerService } from '../../../api/services/customerService';
 
 export default function CustomerList() {
 
     const navigate = useNavigate();
+    const { showSuccess, showError } = useToast();
 
     const [search, setSearch] = useState('');
     const [customers, setCustomers] = useState([]);
@@ -98,17 +100,17 @@ export default function CustomerList() {
             if (editingCustomer) {
                 const response = await customerService.update(editingCustomer.customerId, data);
                 if (response?.success === false) {
-                    alert(response.message || 'Customer update failed');
+                    showError(response.message || 'Customer update failed');
                     return;
                 }
-                alert('Customer updated successfully!');
+                showSuccess('Customer updated successfully!');
             } else {
                 const response = await customerService.create(data);
                 if (response?.success === false) {
-                    alert(response.message || 'Customer creation failed');
+                    showError(response.message || 'Customer creation failed');
                     return;
                 }
-                alert('Customer registered successfully!');
+                showSuccess('Customer registered successfully!');
             }
 
             setShowModal(false);
@@ -117,7 +119,7 @@ export default function CustomerList() {
 
         } catch (err) {
             console.error('Customer save failed:', err);
-            alert(err?.message || 'Failed to save customer');
+            showError(err?.message || 'Failed to save customer');
         }
     };
 
@@ -159,16 +161,16 @@ export default function CustomerList() {
         try {
             const response = await customerService.delete(id);
             if (response?.success === false) {
-                alert(response.message || 'Failed to archive customer');
+                showError(response.message || 'Failed to archive customer');
                 return;
             }
 
-            alert('Customer archived successfully!');
+            showSuccess('Customer archived successfully!');
             await loadCustomers(page, search);
 
         } catch (err) {
             console.error('Delete failed:', err);
-            alert(err?.message || 'Failed to archive customer');
+            showError(err?.message || 'Failed to archive customer');
         }
     };
 
