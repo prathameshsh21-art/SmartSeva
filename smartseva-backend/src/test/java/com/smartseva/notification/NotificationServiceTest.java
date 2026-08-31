@@ -21,8 +21,6 @@ import com.smartseva.servicecatalog.entity.ServiceOrder;
 import com.smartseva.servicecatalog.entity.ServiceStatus;
 import com.smartseva.servicecatalog.repository.ServiceOrderRepository;
 import com.smartseva.storage.FileStorageService;
-import jakarta.mail.Session;
-import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,19 +30,21 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.mail.MailSendException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.RestClient;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
 @ExtendWith(MockitoExtension.class)
 public class NotificationServiceTest {
@@ -65,11 +65,9 @@ public class NotificationServiceTest {
     private DocumentRepository documentRepository;
 
     @Mock
-    private JavaMailSender mailSender;
-
-    @Mock
     private FileStorageService fileStorageService;
 
+    private MockRestServiceServer mockServer;
     private EmailNotificationChannel emailChannel;
     private SmsNotificationChannel smsChannel;
     private WhatsAppNotificationChannel whatsAppChannel;
@@ -82,7 +80,11 @@ public class NotificationServiceTest {
 
     @BeforeEach
     void setUp() {
-        emailChannel = new EmailNotificationChannel(mailSender, fileStorageService);
+        RestClient.Builder restClientBuilder = RestClient.builder().baseUrl("https://api.resend.com");
+        mockServer = MockRestServiceServer.bindTo(restClientBuilder).build();
+        RestClient testRestClient = restClientBuilder.build();
+
+        emailChannel = new EmailNotificationChannel(fileStorageService, "re_test_key_12345", "SmartSeva <updates@smartseva.in>", testRestClient);
         smsChannel = new SmsNotificationChannel();
         whatsAppChannel = new WhatsAppNotificationChannel();
 
@@ -125,9 +127,12 @@ public class NotificationServiceTest {
     @Test
     void testDispatchMultiChannelSuccess() {
         when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
-        doNothing().when(mailSender).send(any(MimeMessage.class));
-        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
         when(fileStorageService.loadFileAsResource(anyString())).thenReturn(new ByteArrayResource("test-cert".getBytes()));
+
+        mockServer.expect(requestTo("https://api.resend.com/emails"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer re_test_key_12345"))
+                .andRespond(withSuccess("{\"id\":\"email_123\"}", MediaType.APPLICATION_JSON));
 
         Document doc = Document.builder()
                 .documentId(50L)
@@ -158,13 +163,22 @@ public class NotificationServiceTest {
         assertNotNull(waRes.getActionLink());
         assertTrue(waRes.getActionLink().startsWith("https://wa.me/918050653488?text="));
 
+        // Check Email result
+        ChannelDeliveryResultDTO emailRes = results.stream().filter(r -> r.getChannel() == NotificationType.EMAIL).findFirst().orElseThrow();
+        assertTrue(emailRes.isSuccess());
+        assertEquals("SENT", emailRes.getStatus());
+        assertTrue(emailRes.getMessage().contains("Resend API"));
+
         verify(activityLogService, atLeast(3)).logActivity(any(), eq(serviceOrder), anyString(), anyString());
     }
 
     @Test
-    void testEmailSmtpFailureMarksNotificationFailed() {
+    void testEmailResendApiFailureMarksNotificationFailed() {
         when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
-        doThrow(new MailSendException("SMTP connection timeout")).when(mailSender).send(any(SimpleMailMessage.class));
+
+        mockServer.expect(requestTo("https://api.resend.com/emails"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withServerError().body("{\"message\":\"Resend API Internal Server Error\"}"));
 
         List<ChannelDeliveryResultDTO> results = notificationService.dispatchStatusNotifications(
                 serviceOrder,
@@ -240,9 +254,12 @@ public class NotificationServiceTest {
         request.setServiceId(10L);
         request.setNotificationType(NotificationType.EMAIL);
 
+        mockServer.expect(requestTo("https://api.resend.com/emails"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess("{\"id\":\"email_123\"}", MediaType.APPLICATION_JSON));
+
         when(serviceOrderRepository.findById(10L)).thenReturn(Optional.of(serviceOrder));
         when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
-        doNothing().when(mailSender).send(any(SimpleMailMessage.class));
 
         NotificationDTO result = notificationService.sendCompletionNotification(request);
 
@@ -258,10 +275,13 @@ public class NotificationServiceTest {
                 .message("Your documents are ready for collection at the center.")
                 .build();
 
+        mockServer.expect(requestTo("https://api.resend.com/emails"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess("{\"id\":\"email_123\"}", MediaType.APPLICATION_JSON));
+
         when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
         when(serviceOrderRepository.findByCustomerCustomerId(1L)).thenReturn(List.of(serviceOrder));
         when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
-        doNothing().when(mailSender).send(any(SimpleMailMessage.class));
 
         NotificationDTO result = notificationService.sendCompletionNotification(request);
 
